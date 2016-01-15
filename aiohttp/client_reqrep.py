@@ -520,6 +520,7 @@ class ClientResponse:
     flow_control_class = FlowControlStreamReader  # reader flow control
     _reader = None     # input stream
     _response_parser = aiohttp.HttpResponseParser()
+    _payload_parser_class = aiohttp.HttpPayloadParser
     _source_traceback = None
     # setted up by ClientRequest after ClientResponse object creation
     # post-init stage allows to not change ctor signature
@@ -616,9 +617,9 @@ class ClientResponse:
         # payload
         response_with_body = self._need_parse_response_body()
         self._reader.set_parser(
-            aiohttp.HttpPayloadParser(message,
-                                      readall=read_until_eof,
-                                      response_with_body=response_with_body),
+            self._payload_parser_class(message,
+                                       readall=read_until_eof,
+                                       response_with_body=response_with_body),
             self.content)
 
         # cookies
