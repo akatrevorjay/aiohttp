@@ -585,6 +585,8 @@ class HttpMessage(metaclass=ABCMeta):
             if self.version == HttpVersion10:
                 if self.headers.get(hdrs.CONNECTION) == 'keep-alive':
                     return True
+                elif self.headers.get(hdrs.PROXY_CONNECTION) == 'keep-alive':
+                    return True
                 else:  # no headers means we close for Http 1.0
                     return False
             else:
@@ -616,7 +618,15 @@ class HttpMessage(metaclass=ABCMeta):
         if name == hdrs.TRANSFER_ENCODING:
             self.has_chunked_hdr = value.lower().strip() == 'chunked'
 
-        if name == hdrs.CONNECTION:
+        if name == hdrs.PROXY_CONNECTION:
+            val = value.lower()
+            # connection keep-alive
+            if 'close' in val:
+                self.keepalive = False
+            elif 'keep-alive' in val:
+                self.keepalive = True
+
+        elif name == hdrs.CONNECTION:
             val = value.lower()
             # handle websocket
             if 'upgrade' in val:
