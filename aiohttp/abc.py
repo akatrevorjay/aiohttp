@@ -16,15 +16,24 @@ class AbstractRouter(metaclass=ABCMeta):
 
 class AbstractMatchInfo(metaclass=ABCMeta):
 
-    @property  # pragma: no branch
+    @asyncio.coroutine  # pragma: no branch
     @abstractmethod
-    def handler(self):
-        """Return handler for match info"""
+    def handler(self, request):
+        """Execute matched request handler"""
+
+    @asyncio.coroutine  # pragma: no branch
+    @abstractmethod
+    def expect_handler(self, request):
+        """Expect handler for 100-continue processing"""
 
     @property  # pragma: no branch
     @abstractmethod
-    def route(self):
-        """Return route for match info"""
+    def http_exception(self):
+        """HTTPException instance raised on router's resolving, or None"""
+
+    @abstractmethod
+    def get_info(self):
+        """Return a dict with additional info useful for introspection"""
 
 
 class AbstractView(metaclass=ABCMeta):

@@ -340,11 +340,17 @@ The client session supports context manager protocol for self closing.
 
          Add *origin* parameter.
 
-   .. method:: close()
+   .. coroutinemethod:: close()
 
       Close underlying connector.
 
       Release all acquired resources.
+
+      .. versionchanged:: 0.21
+
+         The method is converted into coroutine (but technically
+         returns a future for keeping backward compatibility during
+         transition period).
 
    .. method:: detach()
 
@@ -706,9 +712,15 @@ BaseConnector
 
       .. versionadded:: 0.16
 
-   .. method:: close()
+   .. coroutinemethod:: close()
 
       Close all opened connections.
+
+      .. versionchanged:: 0.21
+
+         The method is converted into coroutine (but technically
+         returns a future for keeping backward compatibility during
+         transition period).
 
    .. coroutinemethod:: connect(request)
 
@@ -740,7 +752,7 @@ TCPConnector
                         family=0, \
                         ssl_context=None, conn_timeout=None, \
                         keepalive_timeout=30, limit=None, share_cookies=False, \
-                        force_close=False, loop=None)
+                        force_close=False, loop=None, local_addr=None)
 
    Connector for working with *HTTP* and *HTTPS* via *TCP* sockets.
 
@@ -793,6 +805,11 @@ TCPConnector
 
       *ssl_context* may be used for configuring certification
       authority channel, supported SSL options etc.
+
+   :param tuple local_addr: tuple of ``(local_host, local_port)`` used to bind
+      socket locally if specified.
+
+      .. versionadded:: 0.21
 
    .. attribute:: verify_ssl
 
@@ -1032,6 +1049,18 @@ Response object
    .. attribute:: reason
 
       HTTP status reason of response (:class:`str`), e.g. ``"OK"``.
+
+   .. attribute:: host
+
+      Host part of requested url (:class:`str`).
+
+   .. attribute:: method
+
+      Request's method (:class:`str`).
+
+   .. attribute:: url
+
+      URL of request (:class:`str`).
 
    .. attribute:: connection
 

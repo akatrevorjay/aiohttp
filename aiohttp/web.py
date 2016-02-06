@@ -79,9 +79,9 @@ class RequestHandler(ServerHttpProtocol):
             resp = None
             request._match_info = match_info
             expect = request.headers.get(hdrs.EXPECT)
-            if expect and expect.lower() == "100-continue":
+            if expect:
                 resp = (
-                    yield from match_info.route.handle_expect_header(request))
+                    yield from match_info.expect_handler(request))
 
             if resp is None:
                 handler = match_info.handler
@@ -142,6 +142,14 @@ class RequestHandlerFactory:
             del self._connections[handler]
 
     @asyncio.coroutine
+    def _connections_cleanup(self):
+        sleep = 0.05
+        while self._connections:
+            yield from asyncio.sleep(sleep, loop=self._loop)
+            if sleep < 5:
+                sleep = sleep * 2
+
+    @asyncio.coroutine
     def finish_connections(self, timeout=None):
         # try to close connections in 90% of graceful timeout
         timeout90 = None
@@ -151,18 +159,10 @@ class RequestHandlerFactory:
         for handler in self._connections.keys():
             handler.closing(timeout=timeout90)
 
-        @asyncio.coroutine
-        def cleanup():
-            sleep = 0.05
-            while self._connections:
-                yield from asyncio.sleep(sleep, loop=self._loop)
-                if sleep < 5:
-                    sleep = sleep * 2
-
         if timeout:
             try:
                 yield from asyncio.wait_for(
-                    cleanup(), timeout, loop=self._loop)
+                    self._connections_cleanup(), timeout, loop=self._loop)
             except asyncio.TimeoutError:
                 self._app.logger.warning(
                     "Not all connections are closed (pending: %d)",
